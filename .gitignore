@@ -1,2 +1,3 @@
 geo/*.tif
 **/*.tif
+*.DS_Store
