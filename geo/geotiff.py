@@ -4,6 +4,7 @@ from shapely.geometry import Polygon
 import rasterio.mask
 import csv
 import numpy as np
+import overpy
 
 
 #---------------------------------------------------
@@ -51,13 +52,26 @@ def create_ply(data):
 
     print(f"width: {width} , height: {height}")
 
+    # At 38 degrees North latitude (which passes through Stockton California and Charlottesville Virginia):
+    # One degree of latitude equals approximately 364,000 feet (69 miles), one minute equals 6,068 feet (1.15 miles), and one-second equals 101 feet. 
+    # One-degree of longitude equals 288,200 feet
+
+    # one meter = 3.28084 feet
     for x in range(width):
 
         for y in range(height):
 
             lon, lat = data.xy(x, y)
             #vertex = [x, y, 0, 0, 0, 0, elev_band[x,y]]
-            vertex = [lon, lat, 0, 0, 0, 0, elev_band[x,y]]
+            #vertex = [lon, lat, 0, 0, 0, 0, elev_band[x,y]]
+
+            xCalc = abs( data.xy(x, y)[1] - data.xy(0, y)[1] ) * 288200.0
+
+            yCalc = abs( data.xy(x, y)[0] - data.xy(x, 0)[0] ) * 364000.0
+
+
+            vertex = [xCalc, yCalc, 0, 0, 0, 0, elev_band[x,y]*3.28084 ]
+
             vertices.append(vertex)
 
             num_verts+=1
@@ -81,6 +95,33 @@ def create_ply(data):
 
     print(f'num vertices {num_verts} - num faces {num_faces}')
     return vertices, faces
+
+
+
+    def thing():
+        ## query for all pistes
+        q = f"""<osm-script>
+                <query type="nwr">
+                <bbox-query e="{xmax}" n="{ymax}" s="{ymin}" w="{xmin}"/>
+                <has-kv k="piste:type" v="downhill"/>
+                </query>
+                <print/>
+                </osm-script>"""
+        api = overpy.Overpass()
+
+        result = api.query(q)
+
+        with open("piste_coords.txt", 'w') as f:
+            for way in result.ways:
+
+                # piste is named
+                if res.tags.get("name", "") != "":
+
+                    print(f"""Saving piste {res.tags.get("name", "")}""")
+
+                    for nodes in way.get_nodes(resolve_missing=True):
+                        0
+                        #f.write(f"{} {}")
 
 
 if __name__ == "__main__":
@@ -138,6 +179,8 @@ if __name__ == "__main__":
 
     print(f"dataset bounds: {data.bounds}")
 
+    final_bounds = data.bounds
+
     vertices, faces = create_ply(data)
 
     header = ("ply\n"
@@ -158,7 +201,7 @@ if __name__ == "__main__":
 
     print(f'writing {len(vertices)} vertices, {len(faces)} faces')
 
-    with open("geo_test5_latlon.ply", 'w') as f:
+    with open("geo_test9.ply", 'w') as f:
         
         f.write(header)
         vertex_str = ""
@@ -176,4 +219,14 @@ if __name__ == "__main__":
             face_str += line
 
         f.write(face_str)
+
+
+
+
+
+
+
+    ## 'aerialway'
+
+
 
