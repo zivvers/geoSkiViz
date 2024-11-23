@@ -56,6 +56,7 @@ def create_ply(data):
         for y in range(height):
 
             lon, lat = data.xy(x, y)
+            #vertex = [x, y, 0, 0, 0, 0, elev_band[x,y]]
             vertex = [lon, lat, 0, 0, 0, 0, elev_band[x,y]]
             vertices.append(vertex)
 
@@ -90,20 +91,50 @@ if __name__ == "__main__":
     xmax, ymax = -118.988889, 37.65753
 
     bbox = Polygon([(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)])
+  
 
     with rasterio.open('USGS_1_n38w120_20210701.tif') as src:
         out_image, out_transform = rasterio.mask.mask(src, [bbox], crop=True, filled=False, all_touched=True) #filled
         out_meta = src.meta
 
-    out_meta.update({"driver": "GTiff",
-                 "height": out_image.shape[1],
-                 "width": out_image.shape[2],
-                 "transform": out_transform})
+        out_meta.update({"driver": "GTiff",
+                     "height": out_image.shape[1],
+                     "width": out_image.shape[2],
+                     "transform": out_transform})
 
     with rasterio.open("mammoth-mtn.tif", "w", **out_meta) as dest:
         dest.write(out_image)
-        
-    data = rasterio.open('mammoth-mtn.tif')
+       
+    scale_factor = (2.0/3)
+
+    with rasterio.open('mammoth-mtn.tif') as clipped_src:
+
+        print(f"mammoth-mtn bounds: {clipped_src.bounds}")
+        out_meta_clipped = clipped_src.meta
+
+        out_image_scld = clipped_src.read(
+            out_shape=(
+                clipped_src.count,
+                int(clipped_src.height * scale_factor),
+                int(clipped_src.width * scale_factor)
+            ),
+            resampling=Resampling.bilinear
+        )
+
+        transform_scald = clipped_src.transform * clipped_src.transform.scale(
+            (clipped_src.width / out_image_scld.shape[-1]),
+            (clipped_src.height / out_image_scld.shape[-2])
+        )
+
+        out_meta_clipped.update({"driver": "GTiff",
+                     "height": out_image_scld.shape[1],
+                     "width": out_image_scld.shape[2],
+                     "transform": transform_scald})
+
+    with rasterio.open("mammoth-mtn-scld.tif", "w", **out_meta_clipped) as dest:
+        dest.write(out_image_scld)
+
+    data = rasterio.open("mammoth-mtn-scld.tif")
 
     print(f"dataset bounds: {data.bounds}")
 
@@ -127,7 +158,7 @@ if __name__ == "__main__":
 
     print(f'writing {len(vertices)} vertices, {len(faces)} faces')
 
-    with open("geo_test4.ply", 'w') as f:
+    with open("geo_test5_latlon.ply", 'w') as f:
         
         f.write(header)
         vertex_str = ""
