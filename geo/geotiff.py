@@ -221,8 +221,32 @@ if __name__ == "__main__":
         f.write(face_str)
 
 
+    ## 
+    api = overpy.Overpass()
 
+    q = f"""<osm-script>
+                <query type="nwr">
+                <bbox-query e="{xmax}" n="{ymax}" s="{ymin}" w="{xmin}"/>
+                <has-kv k="piste:type" v="downhill"/>
+                </query>
+                <print/>
+            </osm-script>"""
 
+    result = api.query( q )
+
+    nodes = []
+    # Avalanche Chutes
+    for res in result.ways:
+        if res.tags.get("name", "") == "Avalanche Chutes":
+            nodes = res.get_nodes(resolve_missing=True)
+
+            break
+
+    with open("piste_coords.txt", "w") as f2:
+        for node in nodes:
+            x = abs( float(node.lat) - float(data.xy(0, 0)[1]) ) * 288200.0
+            y = abs( float(node.lon) - float(data.xy(x, 0)[0]) ) * 364000.0
+            f2.write(f"{x} {y}\n")
 
 
 
