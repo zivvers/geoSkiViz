@@ -3,6 +3,7 @@ FROM python:3.7-buster
 RUN mkdir /usr/src/geo
 WORKDIR /usr/src/geo
 
+RUN pip install --upgrade pip
 RUN pip install rasterio
 RUN pip install numpy
 RUN pip install overpy

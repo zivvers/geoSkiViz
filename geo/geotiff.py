@@ -146,7 +146,7 @@ if __name__ == "__main__":
     with rasterio.open("mammoth-mtn.tif", "w", **out_meta) as dest:
         dest.write(out_image)
        
-    scale_factor = (2.0/3)
+    scale_factor = (1.0/3)
 
     with rasterio.open('mammoth-mtn.tif') as clipped_src:
 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     print(f'writing {len(vertices)} vertices, {len(faces)} faces')
 
-    with open("geo_test9.ply", 'w') as f:
+    with open("geo_test10.ply", 'w') as f:
         
         f.write(header)
         vertex_str = ""
@@ -237,12 +237,16 @@ if __name__ == "__main__":
     nodes = []
     # Avalanche Chutes
     for res in result.ways:
-        if res.tags.get("name", "") == "Avalanche Chutes":
+
+        if res.tags.get("name", ""):
+            print(res.tags.get("name", ""))
+        #if res.tags.get("name", "") == "Avalanche Chutes":
+        if res.tags.get("name", "") == "Hully Gully":
             nodes = res.get_nodes(resolve_missing=True)
 
             break
 
-    with open("piste_coords.txt", "w") as f2:
+    with open("piste_coords_v2.txt", "w") as f2:
         for node in nodes:
             x = abs( float(node.lat) - float(data.xy(0, 0)[1]) ) * 288200.0
             y = abs( float(node.lon) - float(data.xy(x, 0)[0]) ) * 364000.0
