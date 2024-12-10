@@ -246,11 +246,24 @@ if __name__ == "__main__":
 
             break
 
-    with open("piste_coords_v2.txt", "w") as f2:
-        for node in nodes:
-            x = abs( float(node.lat) - float(data.xy(0, 0)[1]) ) * 288200.0
-            y = abs( float(node.lon) - float(data.xy(x, 0)[0]) ) * 364000.0
-            f2.write(f"{x} {y}\n")
+    with open("piste_coords_mammoth.txt", "w") as f2:
+
+
+        for res in result.ways:
+
+            if res.tags.get("name", ""):
+                print(res.tags.get("name", ""))
+                #if res.tags.get("name", "") == "Avalanche Chutes":
+                #if res.tags.get("name", "") == "Hully Gully":
+                nodes = res.get_nodes(resolve_missing=True)
+
+                f2.write(f"""{res.tags.get("name", "")}\n""")
+                for node in nodes:
+                    x = abs( float(node.lat) - float(data.xy(0, 0)[1]) ) * 288200.0
+                    y = abs( float(node.lon) - float(data.xy(x, 0)[0]) ) * 364000.0
+                    f2.write(f"{x} {y}\n")
+
+                f2.write("\n") # line break between differen pistes
 
 
 
